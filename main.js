@@ -8,17 +8,24 @@ const state = {
   eth: {
     updates: [],
     currentIndex: 0
+  },
+  pagination: {
+    skip: 0,
+    limit: 50,
+    hasMore: true,
+    totalLoaded: 0
   }
 };
 
-async function fetchPriceUpdates() {
+async function fetchPriceUpdates(append = false) {
   try {
+    const skip = append ? state.pagination.skip : 0;
     const response = await fetch(SUBGRAPH_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `{
-          valueUpdates(first: 50, orderBy: updatedAt, orderDirection: desc) {
+          valueUpdates(first: ${state.pagination.limit}, skip: ${skip}, orderBy: updatedAt, orderDirection: desc) {
             value
             dataFeedId
             updatedAt
@@ -28,6 +35,10 @@ async function fetchPriceUpdates() {
     });
 
     const { data } = await response.json();
+
+    // Check if we have more data
+    const hasMore = data.valueUpdates.length === state.pagination.limit;
+    state.pagination.hasMore = hasMore;
 
     // Separate updates by feed type
     const tiaUpdates = [];
@@ -45,16 +56,30 @@ async function fetchPriceUpdates() {
     });
 
     // Update state
-    state.tia.updates = tiaUpdates;
-    state.eth.updates = ethUpdates;
-    state.tia.currentIndex = 0;
-    state.eth.currentIndex = 0;
+    if (append) {
+      // Append new data to existing
+      state.tia.updates = [...state.tia.updates, ...tiaUpdates];
+      state.eth.updates = [...state.eth.updates, ...ethUpdates];
+      state.pagination.skip += state.pagination.limit;
+      state.pagination.totalLoaded += data.valueUpdates.length;
+    } else {
+      // Replace with fresh data
+      state.tia.updates = tiaUpdates;
+      state.eth.updates = ethUpdates;
+      state.tia.currentIndex = 0;
+      state.eth.currentIndex = 0;
+      state.pagination.skip = state.pagination.limit;
+      state.pagination.totalLoaded = data.valueUpdates.length;
+    }
 
     // Update UI
     updateCard('tia');
     updateCard('eth');
-    updateStatus('Prices loaded successfully');
-    updateLastRefresh();
+    updateLoadMoreButton();
+    updateStatus(append ? 'More history loaded' : 'Prices loaded successfully');
+    if (!append) {
+      updateLastRefresh();
+    }
 
   } catch (error) {
     console.error('Failed to fetch prices:', error);
@@ -135,6 +160,39 @@ function updateLastRefresh() {
   document.getElementById('last-refresh').textContent = `Last refresh: ${now}`;
 }
 
+function updateLoadMoreButton() {
+  const btn = document.getElementById('load-more');
+  const info = document.querySelector('.load-more-info');
+
+  btn.disabled = !state.pagination.hasMore;
+
+  if (!state.pagination.hasMore) {
+    btn.textContent = 'No More History';
+  } else {
+    btn.textContent = 'Load More History';
+  }
+
+  info.textContent = `Showing ${state.pagination.totalLoaded} updates`;
+}
+
+async function loadMoreHistory() {
+  const btn = document.getElementById('load-more');
+
+  // Add loading state
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try {
+    await fetchPriceUpdates(true);
+  } catch (error) {
+    console.error('Failed to load more history:', error);
+    updateStatus('Error loading more history');
+  } finally {
+    btn.classList.remove('loading');
+    updateLoadMoreButton();
+  }
+}
+
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
   // Navigation buttons
@@ -146,9 +204,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Load more button
+  document.getElementById('load-more').addEventListener('click', loadMoreHistory);
+
   // Initial load
   fetchPriceUpdates();
 
-  // Refresh every 30 seconds
-  setInterval(fetchPriceUpdates, 30000);
+  // Refresh every 30 seconds (only refresh, don't append)
+  setInterval(() => fetchPriceUpdates(false), 30000);
 });
