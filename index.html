@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Eden Price Feeds</title>
+        <link rel="stylesheet" href="/style.css" />
+    </head>
+    <body>
+        <div class="container">
+            <h1>Eden RedStone oracle + Goldsky indexer</h1>
+
+            <div class="cards-container">
+                <div id="tia-card" class="price-card tia">
+                    <div class="card-header">
+                        <div class="symbol">TIA/USD</div>
+                        <div class="nav-controls">
+                            <button
+                                class="nav-btn prev"
+                                data-feed="tia"
+                                disabled
+                            >
+                                ←
+                            </button>
+                            <span class="update-counter">
+                                <span class="current-index">0</span> /
+                                <span class="total-updates">0</span>
+                            </span>
+                            <button
+                                class="nav-btn next"
+                                data-feed="tia"
+                                disabled
+                            >
+                                →
+                            </button>
+                        </div>
+                    </div>
+                    <div class="value">--</div>
+                    <div class="timestamp">--</div>
+                </div>
+
+                <div id="eth-card" class="price-card eth">
+                    <div class="card-header">
+                        <div class="symbol">ETH/USD</div>
+                        <div class="nav-controls">
+                            <button
+                                class="nav-btn prev"
+                                data-feed="eth"
+                                disabled
+                            >
+                                ←
+                            </button>
+                            <span class="update-counter">
+                                <span class="current-index">0</span> /
+                                <span class="total-updates">0</span>
+                            </span>
+                            <button
+                                class="nav-btn next"
+                                data-feed="eth"
+                                disabled
+                            >
+                                →
+                            </button>
+                        </div>
+                    </div>
+                    <div class="value">--</div>
+                    <div class="timestamp">--</div>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <span id="status">Loading prices...</span>
+                <span id="last-refresh">Never</span>
+            </div>
+        </div>
+
+        <script type="module" src="/main.js"></script>
+    </body>
+</html>
