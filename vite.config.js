@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/eden-goldsky-redstone-demo/',
+  base: '/',
   build: {
     outDir: 'dist'
   }
