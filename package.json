@@ -21,6 +21,6 @@
   },
   "homepage": "https://github.com/celestiaorg/eden-goldsky-redstone-demo#readme",
   "devDependencies": {
-    "vite": "^7.1.11"
+    "vite": "^7.3.7"
   }
 }
